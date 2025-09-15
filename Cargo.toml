@@ -21,6 +21,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # For the mutable types (assuming you're using a reactive framework)
 futures-signals = "0.3.34"
 
+[target.'cfg(unix)'.dependencies]
+openssl = { version = "0.10.73", features = ["vendored"] }
+
 [profile.release]
 opt-level = 3
 lto = true
