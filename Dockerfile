@@ -47,9 +47,5 @@ USER appuser
 # Set environment variables
 ENV RUST_LOG=info
 
-# Health check to ensure the service is running
-HEALTHCHECK --interval=5m --timeout=10s --start-period=30s --retries=3 \
-    CMD pgrep margonem-monitor || exit 1
-
 # Run the application
 CMD ["margonem-monitor"]

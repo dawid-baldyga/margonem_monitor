@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  margonem-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: margonem-monitor:latest
+    container_name: margonem-monitor
+    environment:
+      - RUST_LOG=info
+    restart: unless-stopped
+    networks:
+      - monitor-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  monitor-network:
+    driver: bridge
