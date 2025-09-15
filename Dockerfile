@@ -1,5 +1,11 @@
-# Use cargo-chef for better dependency caching
-FROM lukemathwalker/cargo-chef:latest-rust-1.81-slim AS chef
+FROM messense/rust-musl-cross:x86_64-musl AS chef
+
+# Configure Cargo
+RUN mkdir -p /root/.cargo && echo '[net]\ngit-fetch-with-cli = true' > /root/.cargo/config.toml
+
+# Install cargo-chef
+RUN cargo install cargo-chef
+
 WORKDIR /app
 
 # Plan stage - prepare dependency information
@@ -12,28 +18,25 @@ RUN cargo chef prepare --recipe-path recipe.json
 FROM chef AS builder
 
 # Install required dependencies for building
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y \
+#     pkg-config \
+#     libssl-dev \
+#     && rm -rf /var/lib/apt/lists/*
 
 # Copy and build dependencies first (cached unless Cargo.toml/lock changes)
 COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
+RUN cargo chef cook --release --target x86_64-unknown-linux-musl --recipe-path recipe.json
 
 # Copy source code and build the application
 COPY Cargo.toml Cargo.lock ./
 COPY . .
-RUN cargo build --release
+RUN cargo build --release --target x86_64-unknown-linux-musl
 
 # Runtime stage
-FROM debian:bookworm-slim
+FROM alpine:latest AS runtime
 
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    libssl3 \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk --no-cache add ca-certificates
 
 WORKDIR /app
 
