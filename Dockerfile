@@ -5,7 +5,7 @@ WORKDIR /app
 # Plan stage - prepare dependency information
 FROM chef AS planner
 COPY Cargo.toml Cargo.lock ./
-COPY src ./src
+COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
 # Build stage - build dependencies separately from source
@@ -23,7 +23,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 # Copy source code and build the application
 COPY Cargo.toml Cargo.lock ./
-COPY src ./src
+COPY . .
 RUN cargo build --release
 
 # Runtime stage
