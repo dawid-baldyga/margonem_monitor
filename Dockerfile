@@ -41,7 +41,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /app
 
 # Copy the binary from builder
-COPY --from=builder /app/target/release/margonem-monitor /usr/local/bin/margonem-monitor
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/margonem-monitor /usr/local/bin/margonem-monitor
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
