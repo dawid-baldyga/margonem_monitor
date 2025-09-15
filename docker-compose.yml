@@ -1,12 +1,12 @@
 version: '3.8'
 
 services:
-  margonem-monitor:
+  margonem_monitor:
     build:
       context: .
       dockerfile: Dockerfile
-    image: margonem-monitor:latest
-    container_name: margonem-monitor
+    image: margonem_monitor:latest
+    container_name: margonem_monitor
     environment:
       - RUST_LOG=info
     restart: unless-stopped
