@@ -37,7 +37,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum Notif {
     Kic,
     Rene,
@@ -275,6 +275,53 @@ impl FromStr for Profession {
     }
 }
 
+#[derive(Debug, Default)]
+struct Notified {
+    kic: u8,
+    rene: u8,
+    arcy: u8,
+    zoons: u8,
+    lowka: u8,
+    przyzy: u8,
+    magua: u8,
+    topka: u8,
+}
+
+impl Index<Notif> for Notified {
+    type Output = u8;
+    fn index(&self, index: Notif) -> &Self::Output {
+        use Notif::*;
+
+        match index {
+            Kic => &self.kic,
+            Rene => &self.rene,
+            Arcy => &self.arcy,
+            Zoons => &self.zoons,
+            Lowka => &self.lowka,
+            Przyzy => &self.przyzy,
+            Magua => &self.magua,
+            Topka => &self.topka,
+        }
+    }
+}
+
+impl IndexMut<Notif> for Notified {
+    fn index_mut(&mut self, index: Notif) -> &mut Self::Output {
+        use Notif::*;
+
+        match index {
+            Kic => &mut self.kic,
+            Rene => &mut self.rene,
+            Arcy => &mut self.arcy,
+            Zoons => &mut self.zoons,
+            Lowka => &mut self.lowka,
+            Przyzy => &mut self.przyzy,
+            Magua => &mut self.magua,
+            Topka => &mut self.topka,
+        }
+    }
+}
+
 async fn monitor_loop() -> Result<()> {
     use Notif::*;
 
@@ -282,9 +329,17 @@ async fn monitor_loop() -> Result<()> {
 
     let mut interval = time::interval(Duration::from_secs(60));
     let mut deque = VecDeque::with_capacity(QUEUE_CAPACITY);
+    let mut last_notified = Notified::default();
 
     loop {
         interval.tick().await;
+
+        [Kic, Rene, Arcy, Zoons, Lowka, Przyzy, Magua, Topka]
+            .into_iter()
+            .for_each(|variant| {
+                last_notified[variant] = last_notified[variant].saturating_sub(1);
+            });
+
         info!("Checking for players...");
 
         let players = fetch_players_data().await?;
@@ -307,6 +362,10 @@ async fn monitor_loop() -> Result<()> {
             let mut most_active_ranges = [Kic, Rene, Arcy, Zoons, Lowka, Przyzy, Magua, Topka]
                 .into_iter()
                 .filter_map(|variant| {
+                    if last_notified[variant] != 0 {
+                        return None;
+                    }
+                    
                     (players_counter[variant] >= PLAYER_OVERFLOW)
                         .then_some((variant, players_counter[variant]))
                 })
@@ -322,6 +381,10 @@ async fn monitor_loop() -> Result<()> {
             let mut from_over_time_overflow = [Kic, Rene, Arcy, Zoons, Lowka, Przyzy, Magua, Topka]
                 .into_iter()
                 .filter_map(|variant| {
+                    if last_notified[variant] != 0 {
+                        return None;
+                    }
+
                     // Get the lowest amount of players logged in for the given lvl range in the last 5min.
                     let lowest = deque
                         .iter()
@@ -342,6 +405,7 @@ async fn monitor_loop() -> Result<()> {
                 })
                 .collect::<Vec<_>>();
 
+            from_over_time_overflow.retain(|(variant,_)| !variants.contains(variant));
             from_over_time_overflow.sort_by(|a, b| a.1.cmp(&b.1).reverse());
             from_over_time_overflow.truncate(fields_left);
 
@@ -352,6 +416,7 @@ async fn monitor_loop() -> Result<()> {
             );
         }
         if !variants.is_empty() {
+            variants.iter().for_each(|&variant| last_notified[variant] = 5);
             send_discord_notification(players, players_counter, variants).await?;
         } else {
             info!("No notification due to inactivity.")
