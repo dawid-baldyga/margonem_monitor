@@ -14,7 +14,7 @@ use tracing::{error, info};
 const API_ENDPOINT_URL: &str = "https://staticinfo.margonem.pl/online/dream.json";
 const USERNAME: &str = "Monitorowanie Graczy Online";
 const ICON_URL: &str = "https://i.imgur.com/JfXZnjf.png";
-const WEBHOOK_URL: &str = "https://discord.com/api/webhooks/1417094385048485908/2QMiWyBr9eFYQ3D1VEmrzlPHst7ar8ObgNikdqSK-1r0ZylVxjjAkU4Z3Ag7YZFdOiVX";
+const WEBHOOK_URL: &str = "https://discord.com/api/webhooks/1417896743546126457/W-4En38YrILmpljmqOMGnzMvFxj_Id408sVJ2JO1SvYtvySU8AVQhoW8V7Ck0-gjWNwQ";
 const MAX_INLINE_FIELDS: usize = 3;
 /// Time window in which the overtime diff is checked.
 const QUEUE_CAPACITY: usize = 5;
